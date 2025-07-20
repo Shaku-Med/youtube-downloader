@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced YouTube Downloader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-playlist {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+        }
+        
+        .info-section, .progress-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .video-info {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .description {
+            grid-column: 1 / -1;
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .tags {
+            grid-column: 1 / -1;
+            margin-top: 10px;
+        }
+        
+        .tag {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin: 2px;
+        }
+        
+        .playlist-entries {
+            grid-column: 1 / -1;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e1e8ed;
+            border-radius: 5px;
+        }
+        
+        .playlist-entry {
+            padding: 10px;
+            border-bottom: 1px solid #e1e8ed;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .playlist-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .playlist-thumbnail {
+            width: 60px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 3px;
+        }
+        
+        .playlist-entry-info {
+            flex: 1;
+        }
+        
+        .playlist-entry-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .playlist-entry-duration {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e1e8ed;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .status-text {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        
+        .download-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+        
+        .playlist-download-links {
+            margin-top: 15px;
+        }
+        
+        .playlist-download-link {
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 15px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .error {
+            color: #e74c3c;
+            background: #ffeaea;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .video-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-label {
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Advanced YouTube Downloader</h1>
+            <p>Download videos and playlists in up to 8K resolution (4320p)</p>
+        </div>
+        
+        <div class="content">
+            <form id="downloadForm">
+                <div class="form-group">
+                    <label for="url">YouTube URL:</label>
+                    <input type="url" id="url" placeholder="https://www.youtube.com/watch?v=... or playlist URL" required>
+                </div>
+                
+                <div class="options-grid">
+                    <div class="form-group">
+                        <label for="format">Format:</label>
+                        <select id="format">
+                            <option value="mp4">MP4 (Video)</option>
+                            <option value="mp3">MP3 (Audio Only)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quality">Quality:</label>
+                        <select id="quality">
+                            <option value="highest">Highest Available (Up to 8K)</option>
+                            <option value="4k">4K (2160p)</option>
+                            <option value="1080p">Full HD (1080p)</option>
+                            <option value="720p">HD (720p)</option>
+                            <option value="lowest">Lower Quality</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button type="button" class="btn" onclick="getVideoInfo()">Get Video/Playlist Info</button>
+                <button type="button" class="btn btn-playlist" onclick="downloadPlaylist()" style="margin-top: 10px;">Download Playlist</button>
+                <button type="submit" class="btn" style="margin-top: 10px;">Download Single Video</button>
+            </form>
+            
+            <div id="infoSection" class="info-section">
+                <h3 id="infoTitle">Video Information</h3>
+                <div id="videoInfo" class="video-info"></div>
+            </div>
+            
+            <div id="progressSection" class="progress-section">
+                <h3>Download Progress</h3>
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <div id="statusText" class="status-text">Preparing download...</div>
+                <div id="downloadLink"></div>
+                <div id="playlistDownloadLinks" class="playlist-download-links"></div>
+            </div>
+            
+            <div id="errorSection" class="error" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <script>
+        let currentDownloadId = null;
+        let isPlaylist = false;
+        
+        function isPlaylistUrl(url) {
+            return url.includes('list=') || url.includes('playlist');
+        }
+        
+        async function getVideoInfo() {
+            const url = document.getElementById('url').value;
+            if (!url) {
+                alert('Please enter a YouTube URL');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/video-info', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({url: url})
+                });
+                
+                if (response.ok) {
+                    const info = await response.json();
+                    isPlaylist = info.is_playlist || info.entries;
+                    displayVideoInfo(info);
+                } else {
+                    const error = await response.json();
+                    showError(error.detail);
+                }
+            } catch (error) {
+                showError('Network error occurred');
+            }
+        }
+        
+        function displayVideoInfo(info) {
+            const infoSection = document.getElementById('infoSection');
+            const videoInfo = document.getElementById('videoInfo');
+            const infoTitle = document.getElementById('infoTitle');
+            
+            infoTitle.textContent = isPlaylist ? 'Playlist Information' : 'Video Information';
+            
+            let html = '';
+            
+            if (isPlaylist) {
+                const duration = Math.floor(info.duration / 60) + ':' + String(info.duration % 60).padStart(2, '0');
+                
+                html = `
+                    <span class="info-label">Playlist Title:</span>
+                    <span>${info.playlist_title || info.title}</span>
+                    <span class="info-label">Total Videos:</span>
+                    <span>${info.playlist_count || info.entries?.length || 0}</span>
+                    <span class="info-label">Uploader:</span>
+                    <span>${info.uploader}</span>
+                `;
+                
+                if (info.description) {
+                    html += `
+                        <div class="description">
+                            <strong>Description:</strong><br>
+                            ${info.description.substring(0, 500)}${info.description.length > 500 ? '...' : ''}
+                        </div>
+                    `;
+                }
+                
+                if (info.playlist_entries && info.playlist_entries.length > 0) {
+                    html += '<div class="playlist-entries">';
+                    info.playlist_entries.forEach((entry, index) => {
+                        const entryDuration = Math.floor(entry.duration / 60) + ':' + String(entry.duration % 60).padStart(2, '0');
+                        html += `
+                            <div class="playlist-entry">
+                                <img src="${entry.thumbnail}" alt="Thumbnail" class="playlist-thumbnail" onerror="this.style.display='none'">
+                                <div class="playlist-entry-info">
+                                    <div class="playlist-entry-title">${index + 1}. ${entry.title}</div>
+                                    <div class="playlist-entry-duration">${entryDuration} • ${entry.uploader}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+            } else {
+                const duration = Math.floor(info.duration / 60) + ':' + String(info.duration % 60).padStart(2, '0');
+                
+                html = `
+                    <span class="info-label">Title:</span>
+                    <span>${info.title}</span>
+                    <span class="info-label">Duration:</span>
+                    <span>${duration}</span>
+                    <span class="info-label">Uploader:</span>
+                    <span>${info.uploader}</span>
+                    <span class="info-label">Views:</span>
+                    <span>${info.view_count.toLocaleString()}</span>
+                    <span class="info-label">Likes:</span>
+                    <span>${info.like_count.toLocaleString()}</span>
+                    <span class="info-label">Comments:</span>
+                    <span>${info.comment_count.toLocaleString()}</span>
+                    <span class="info-label">Upload Date:</span>
+                    <span>${info.upload_date}</span>
+                    <span class="info-label">Channel:</span>
+                    <span>${info.channel_url ? `<a href="${info.channel_url}" target="_blank">${info.uploader}</a>` : info.uploader}</span>
+                `;
+                
+                if (info.description) {
+                    html += `
+                        <div class="description">
+                            <strong>Description:</strong><br>
+                            ${info.description.substring(0, 500)}${info.description.length > 500 ? '...' : ''}
+                        </div>
+                    `;
+                }
+                
+                if (info.tags && info.tags.length > 0) {
+                    html += '<div class="tags">';
+                    html += '<strong>Tags:</strong> ';
+                    info.tags.slice(0, 10).forEach(tag => {
+                        html += `<span class="tag">${tag}</span>`;
+                    });
+                    if (info.tags.length > 10) {
+                        html += `<span class="tag">+${info.tags.length - 10} more</span>`;
+                    }
+                    html += '</div>';
+                }
+                
+                if (info.formats && info.formats.length > 0) {
+                    const uniqueResolutions = new Set();
+                    info.formats.forEach(format => {
+                        if (format.resolution && format.resolution !== 'audio only') {
+                            uniqueResolutions.add(format.resolution);
+                        }
+                    });
+                    html += `
+                        <span class="info-label">Available Formats:</span>
+                        <span>${Array.from(uniqueResolutions).sort().join(', ')}</span>
+                    `;
+                }
+            }
+            
+            videoInfo.innerHTML = html;
+            infoSection.style.display = 'block';
+        }
+        
+        async function downloadPlaylist() {
+            const url = document.getElementById('url').value;
+            const format = document.getElementById('format').value;
+            const quality = document.getElementById('quality').value;
+            
+            if (!url) {
+                alert('Please enter a YouTube URL');
+                return;
+            }
+            
+            if (!isPlaylistUrl(url)) {
+                alert('This URL does not appear to be a playlist. Use "Download Single Video" instead.');
+                return;
+            }
+            
+            try {
+                document.getElementById('progressSection').style.display = 'block';
+                document.getElementById('statusText').textContent = 'Starting playlist download...';
+                
+                const response = await fetch('/download-playlist', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({url: url, format: format, quality: quality})
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    currentDownloadId = result.download_id;
+                    checkProgress();
+                } else {
+                    const error = await response.json();
+                    showError(error.detail);
+                }
+            } catch (error) {
+                showError('Network error occurred');
+            }
+        }
+        
+        document.getElementById('downloadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const url = document.getElementById('url').value;
+            const format = document.getElementById('format').value;
+            const quality = document.getElementById('quality').value;
+            
+            if (!url) {
+                alert('Please enter a YouTube URL');
+                return;
+            }
+            
+            try {
+                document.getElementById('progressSection').style.display = 'block';
+                document.getElementById('statusText').textContent = 'Starting download...';
+                
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({url: url, format: format, quality: quality})
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    currentDownloadId = result.download_id;
+                    checkProgress();
+                } else {
+                    const error = await response.json();
+                    showError(error.detail);
+                }
+            } catch (error) {
+                showError('Network error occurred');
+            }
+        });
+        
+        async function checkProgress() {
+            if (!currentDownloadId) return;
+            
+            try {
+                const response = await fetch(`/progress/${currentDownloadId}`);
+                const status = await response.json();
+                
+                if (status.status === 'downloading') {
+                    const percent = status.percent || '0%';
+                    document.getElementById('progressFill').style.width = percent;
+                    
+                    if (status.playlist_download) {
+                        document.getElementById('statusText').textContent = 
+                            `Downloading playlist item ${status.current_item}/${status.total_items}: ${status.current_title || ''} (${status.speed || 'N/A'}) ETA: ${status.eta || 'N/A'}`;
+                    } else {
+                        document.getElementById('statusText').textContent = 
+                            `Downloading... ${percent} (${status.speed || 'N/A'}) ETA: ${status.eta || 'N/A'}`;
+                    }
+                    setTimeout(checkProgress, 1000);
+                } else if (status.status === 'completed') {
+                    document.getElementById('progressFill').style.width = '100%';
+                    document.getElementById('statusText').textContent = 'Download completed!';
+                    
+                    if (status.playlist_download && status.downloaded_files) {
+                        const linksDiv = document.getElementById('playlistDownloadLinks');
+                        linksDiv.innerHTML = '<h4>Download Individual Files:</h4>';
+                        status.downloaded_files.forEach(fileInfo => {
+                            linksDiv.innerHTML += `
+                                <a href="/download-playlist-file/${currentDownloadId}/${fileInfo.index}" class="playlist-download-link">
+                                    ${fileInfo.index}. ${fileInfo.title}
+                                </a>
+                            `;
+                        });
+                    } else {
+                        document.getElementById('downloadLink').innerHTML = 
+                            `<a href="/download-file/${currentDownloadId}" class="download-link">Download File</a>`;
+                    }
+                } else if (status.status === 'error') {
+                    showError(status.error);
+                }
+            } catch (error) {
+                showError('Error checking progress');
+            }
+        }
+        
+        function showError(message) {
+            const errorSection = document.getElementById('errorSection');
+            errorSection.textContent = message;
+            errorSection.style.display = 'block';
+            document.getElementById('progressSection').style.display = 'none';
+        }
+    </script>
+</body>
+</html> 
