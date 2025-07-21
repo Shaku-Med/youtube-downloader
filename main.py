@@ -78,6 +78,16 @@ async def get_video_info(url: str):
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
+        'nocheckcertificate': True,
+        'ignoreerrors': False,
+        'no_color': True,
+        'extractor_retries': 3,
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-us,en;q=0.5',
+            'Sec-Fetch-Mode': 'navigate',
+        }
     }
     
     try:
@@ -125,6 +135,15 @@ async def download_video(url: str, format_type: str, quality: str, download_id: 
                 'preferredquality': '320' if quality == 'highest' else '128',
             }],
             'progress_hooks': [lambda d: progress_hook(d, download_id)],
+            'nocheckcertificate': True,
+            'no_color': True,
+            'extractor_retries': 3,
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-us,en;q=0.5',
+                'Sec-Fetch-Mode': 'navigate',
+            }
         }
     else:
         # Video download options
@@ -149,6 +168,15 @@ async def download_video(url: str, format_type: str, quality: str, download_id: 
             'writesubtitles': False,
             'writeautomaticsub': False,
             'ignoreerrors': False,
+            'nocheckcertificate': True,
+            'no_color': True,
+            'extractor_retries': 3,
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-us,en;q=0.5',
+                'Sec-Fetch-Mode': 'navigate',
+            }
         }
     
     try:
