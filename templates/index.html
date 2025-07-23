@@ -265,6 +265,18 @@
         </div>
         
         <div class="content">
+            <div id="cookieSection" class="form-group" style="display:none;">
+                <label for="cookie"><b>YouTube Login Cookie Required</b></label>
+                <div style="margin-bottom:8px;">
+                    To download age-restricted or private videos, you need to provide your YouTube login cookie.<br>
+                    <b>How to get your YouTube cookies:</b><br>
+                    1. Open YouTube in Chrome.<br>
+                    2. Press F12 to open DevTools, go to the <b>Application</b> tab.<br>
+                    3. In the left sidebar, expand <b>Cookies</b> and select <b>https://www.youtube.com</b>.<br>
+                    4. Find the <b>"cookie"</b> header (or use an extension like "Get cookies.txt"), copy all cookie values, and paste them below.
+                </div>
+                <textarea id="cookie" rows="3" style="width:100%;border-radius:8px;padding:12px;border:2px solid #e1e8ed;font-size:16px;"></textarea>
+            </div>
             <form id="downloadForm">
                 <div class="form-group">
                     <label for="url">YouTube URL:</label>
@@ -326,6 +338,7 @@
         
         async function getVideoInfo() {
             const url = document.getElementById('url').value;
+            const cookie = getSavedCookie();
             if (!url) {
                 alert('Please enter a YouTube URL');
                 return;
@@ -335,7 +348,7 @@
                 const response = await fetch('/video-info', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({url: url})
+                    body: JSON.stringify({url: url, cookie: cookie})
                 });
                 
                 if (response.ok) {
@@ -344,6 +357,9 @@
                     displayVideoInfo(info);
                 } else {
                     const error = await response.json();
+                    if (error.detail && error.detail.includes('Sign in to confirm you’re not a bot')) {
+                        showCookieSection();
+                    }
                     showError(error.detail);
                 }
             } catch (error) {
@@ -462,6 +478,7 @@
             const url = document.getElementById('url').value;
             const format = document.getElementById('format').value;
             const quality = document.getElementById('quality').value;
+            const cookie = getSavedCookie();
             
             if (!url) {
                 alert('Please enter a YouTube URL');
@@ -480,7 +497,7 @@
                 const response = await fetch('/download-playlist', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({url: url, format: format, quality: quality})
+                    body: JSON.stringify({url: url, format: format, quality: quality, cookie: cookie})
                 });
                 
                 if (response.ok) {
@@ -489,6 +506,9 @@
                     checkProgress();
                 } else {
                     const error = await response.json();
+                    if (error.detail && error.detail.includes('Sign in to confirm you’re not a bot')) {
+                        showCookieSection();
+                    }
                     showError(error.detail);
                 }
             } catch (error) {
@@ -502,6 +522,7 @@
             const url = document.getElementById('url').value;
             const format = document.getElementById('format').value;
             const quality = document.getElementById('quality').value;
+            const cookie = getSavedCookie();
             
             if (!url) {
                 alert('Please enter a YouTube URL');
@@ -515,7 +536,7 @@
                 const response = await fetch('/download', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({url: url, format: format, quality: quality})
+                    body: JSON.stringify({url: url, format: format, quality: quality, cookie: cookie})
                 });
                 
                 if (response.ok) {
@@ -524,6 +545,9 @@
                     checkProgress();
                 } else {
                     const error = await response.json();
+                    if (error.detail && error.detail.includes('Sign in to confirm you’re not a bot')) {
+                        showCookieSection();
+                    }
                     showError(error.detail);
                 }
             } catch (error) {
@@ -582,6 +606,28 @@
             errorSection.style.display = 'block';
             document.getElementById('progressSection').style.display = 'none';
         }
+
+        function getSavedCookie() {
+            return localStorage.getItem('youtube_cookie') || '';
+        }
+
+        function showCookieSection() {
+            if (getSavedCookie()) return;
+            const section = document.getElementById('cookieSection');
+            section.style.display = 'block';
+            const textarea = document.getElementById('cookie');
+            textarea.value = '';
+            textarea.addEventListener('input', () => {
+                localStorage.setItem('youtube_cookie', textarea.value);
+                section.style.display = 'none';
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (getSavedCookie()) {
+                document.getElementById('cookieSection').style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html> 

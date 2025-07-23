@@ -28,7 +28,6 @@ class DownloadRequest(BaseModel):
     url: str
     format: str = "best"  # best, worst, mp3, mp4
     quality: str = "highest"  # highest, medium, lowest
-    cookie: Optional[str] = None
 
 class VideoInfo(BaseModel):
     title: str
@@ -74,7 +73,7 @@ def progress_hook(d, download_id):
                 'percent': '100%'
             }
 
-async def get_video_info(url: str, cookie: Optional[str] = None):
+async def get_video_info(url: str):
     """Extract video information without downloading"""
     ydl_opts = {
         'quiet': True,
@@ -90,8 +89,6 @@ async def get_video_info(url: str, cookie: Optional[str] = None):
             'Sec-Fetch-Mode': 'navigate',
         }
     }
-    if cookie:
-        ydl_opts['cookie'] = cookie
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -124,7 +121,7 @@ async def get_video_info(url: str, cookie: Optional[str] = None):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error extracting video info: {str(e)}")
 
-async def download_video(url: str, format_type: str, quality: str, download_id: str, cookie: Optional[str] = None):
+async def download_video(url: str, format_type: str, quality: str, download_id: str):
     """Download video with specified quality"""
     
     # Configure yt-dlp options based on format and quality
@@ -148,8 +145,6 @@ async def download_video(url: str, format_type: str, quality: str, download_id: 
                 'Sec-Fetch-Mode': 'navigate',
             }
         }
-        if cookie:
-            ydl_opts['cookie'] = cookie
     else:
         # Video download options
         if quality == "highest":
@@ -183,8 +178,6 @@ async def download_video(url: str, format_type: str, quality: str, download_id: 
                 'Sec-Fetch-Mode': 'navigate',
             }
         }
-        if cookie:
-            ydl_opts['cookie'] = cookie
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -233,7 +226,7 @@ async def get_interface(request: Request):
 @app.post("/video-info")
 async def video_info_endpoint(request: DownloadRequest):
     """Get video information"""
-    return await get_video_info(request.url, request.cookie)
+    return await get_video_info(request.url)
 
 @app.post("/download")
 async def download_endpoint(request: DownloadRequest, background_tasks: BackgroundTasks):
@@ -252,8 +245,7 @@ async def download_endpoint(request: DownloadRequest, background_tasks: Backgrou
         request.url, 
         request.format, 
         request.quality, 
-        download_id,
-        request.cookie
+        download_id
     )
     
     return {"download_id": download_id, "status": "started"}
