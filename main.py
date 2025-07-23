@@ -91,7 +91,7 @@ async def get_video_info(url: str, cookie: Optional[str] = None):
         }
     }
     if cookie:
-        ydl_opts['cookie'] = cookie
+        ydl_opts['http_headers']['Cookie'] = cookie
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -149,7 +149,7 @@ async def download_video(url: str, format_type: str, quality: str, download_id: 
             }
         }
         if cookie:
-            ydl_opts['cookie'] = cookie
+            ydl_opts['http_headers']['Cookie'] = cookie
     else:
         # Video download options
         if quality == "highest":
@@ -184,7 +184,7 @@ async def download_video(url: str, format_type: str, quality: str, download_id: 
             }
         }
         if cookie:
-            ydl_opts['cookie'] = cookie
+            ydl_opts['http_headers']['Cookie'] = cookie
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
