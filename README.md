@@ -103,6 +103,29 @@ If you want to integrate this into your own projects, we've built a clean REST A
 
 **`GET /download-file/{download_id}`** - Retrieve completed file
 
+### Facebook Download (New)
+
+All Facebook endpoints are prefixed with `/facebook` and mirror the YouTube ones:
+
+- `POST /facebook/video-info`
+  ```json
+  {
+    "url": "https://www.facebook.com/watch/?v=...",
+    "cookie": "optional fb cookie string"
+  }
+  ```
+- `POST /facebook/download`
+  ```json
+  {
+    "url": "https://www.facebook.com/watch/?v=...",
+    "format": "mp4",
+    "quality": "highest",
+    "cookie": "optional"
+  }
+  ```
+- `GET /facebook/progress/{download_id}`
+- `GET /facebook/download-file/{download_id}`
+
 ## Under the Hood
 
 We've built this on a solid foundation of modern technologies:

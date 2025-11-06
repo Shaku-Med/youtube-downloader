@@ -14,6 +14,14 @@ import re
 
 app = FastAPI(title="Advanced YouTube Downloader", version="1.0.0")
 
+# Facebook downloader router
+try:
+    from facebookDownloader import router as facebook_router
+    app.include_router(facebook_router, prefix="/facebook", tags=["facebook"])
+except Exception:
+    # Do not crash app if module fails to import
+    pass
+
 # Create downloads directory
 DOWNLOADS_DIR = Path("downloads")
 DOWNLOADS_DIR.mkdir(exist_ok=True)

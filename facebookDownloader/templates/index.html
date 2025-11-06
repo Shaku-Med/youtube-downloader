@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Downloader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="color-scheme" content="light dark">
+    <style>
+        @keyframes gradient-x { 0%,100% {background-position:0% 50%} 50% {background-position:100% 50%} }
+        .animate-gradient-x { background-size:200% 200%; animation: gradient-x 4s ease-in-out infinite; }
+    </style>
+</head>
+<body class="h-full bg-gray-900 text-white">
+    <div class="min-h-screen flex flex-col items-center justify-center py-8">
+        <div class="w-full max-w-2xl relative">
+            <div class="absolute inset-0 rounded-3xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-0"></div>
+            <div class="relative z-10 p-8">
+                <div class="mb-10 text-center">
+                    <h1 class="text-5xl font-extrabold mb-2 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-gradient-x">Facebook Downloader</h1>
+                    <p class="text-lg text-gray-600 dark:text-gray-300">Download Facebook videos as MP4 or MP3</p>
+                </div>
+                <form id="fbForm" class="space-y-7">
+                    <div>
+                        <label for="url" class="block font-semibold mb-1">Facebook URL</label>
+                        <input type="url" id="url" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white/80 dark:bg-gray-900/80 p-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition shadow-sm" placeholder="https://www.facebook.com/watch/?v=..." required>
+                    </div>
+                    <div>
+                        <label for="cookie" class="block font-semibold mb-1">Optional: Facebook Cookies</label>
+                        <textarea id="cookie" rows="2" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white/80 dark:bg-gray-900/80 p-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition shadow-sm" placeholder="PREF=...; c_user=...; xs=...;"></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label for="format" class="block font-semibold mb-1">Format</label>
+                            <select id="format" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white/80 dark:bg-gray-900/80 p-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition shadow-sm">
+                                <option value="mp4">MP4 (Video)</option>
+                                <option value="mp3">MP3 (Audio Only)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="quality" class="block font-semibold mb-1">Quality</label>
+                            <select id="quality" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white/80 dark:bg-gray-900/80 p-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition shadow-sm">
+                                <option value="highest">Highest Available</option>
+                                <option value="1080p">Full HD (1080p)</option>
+                                <option value="720p">HD (720p)</option>
+                                <option value="lowest">Lower Quality</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button type="button" class="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold py-2.5 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500" onclick="getInfo()">Get Video Info</button>
+                        <button type="submit" class="flex-1 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-semibold py-2.5 rounded-lg shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-400 dark:focus:ring-green-500">Download</button>
+                    </div>
+                </form>
+                <div id="infoSection" class="mt-10 hidden">
+                    <h3 class="text-2xl font-bold mb-5">Video Information</h3>
+                    <div id="videoInfo" class="grid gap-3"></div>
+                </div>
+                <div id="progressSection" class="mt-10 hidden">
+                    <h3 class="text-2xl font-bold mb-5">Download Progress</h3>
+                    <div class="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-3">
+                        <div id="progressFill" class="h-full bg-gradient-to-r from-green-400 to-blue-400 transition-all duration-300" style="width:0%"></div>
+                    </div>
+                    <div id="statusText" class="text-center font-semibold mb-3">Preparing download...</div>
+                    <div id="downloadLink"></div>
+                </div>
+                <div id="errorSection" class="text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-200 rounded-md p-4 mt-8 hidden"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let currentId = null;
+        async function getInfo(){
+            const url = document.getElementById('url').value;
+            const cookie = document.getElementById('cookie').value;
+            if(!url){ alert('Enter a Facebook URL'); return; }
+            try{
+                const res = await fetch('/facebook/video-info',{
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({url, cookie})
+                });
+                if(!res.ok){ const e=await res.json(); showError(e.detail||'Error'); return; }
+                const info = await res.json();
+                const videoInfo = document.getElementById('videoInfo');
+                let html = '';
+                const duration = info.duration ? (Math.floor(info.duration/60)+":"+String(info.duration%60).padStart(2,'0')) : 'N/A';
+                html += `<span class="font-semibold">Title:</span><span>${info.title||'Unknown'}</span>`;
+                html += `<span class="font-semibold">Duration:</span><span>${duration}</span>`;
+                html += `<span class="font-semibold">Uploader:</span><span>${info.uploader||'Unknown'}</span>`;
+                if(info.formats && info.formats.length){
+                    const uniq = Array.from(new Set(info.formats.map(f=>f.resolution).filter(Boolean)));
+                    html += `<span class="font-semibold">Available Resolutions:</span><span>${uniq.join(', ')||'N/A'}</span>`;
+                }
+                videoInfo.innerHTML = html;
+                document.getElementById('infoSection').classList.remove('hidden');
+            }catch(err){ showError('Network error'); }
+        }
+        document.getElementById('fbForm').addEventListener('submit', async (e)=>{
+            e.preventDefault();
+            const url = document.getElementById('url').value;
+            const format = document.getElementById('format').value;
+            const quality = document.getElementById('quality').value;
+            const cookie = document.getElementById('cookie').value;
+            if(!url){ alert('Enter a Facebook URL'); return; }
+            try{
+                document.getElementById('progressSection').classList.remove('hidden');
+                document.getElementById('statusText').textContent = 'Starting download...';
+                const res = await fetch('/facebook/download',{
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({url, format, quality, cookie})
+                });
+                const data = await res.json();
+                if(!res.ok){ showError(data.detail||'Download failed'); return; }
+                currentId = data.download_id;
+                poll();
+            }catch(err){ showError('Network error'); }
+        });
+        async function poll(){
+            if(!currentId) return;
+            try{
+                const res = await fetch(`/facebook/progress/${currentId}`);
+                const s = await res.json();
+                if(s.status==='downloading'){
+                    document.getElementById('progressFill').style.width = s.percent||'0%';
+                    document.getElementById('statusText').textContent = `Downloading... ${s.percent||'0%'} (${s.speed||'N/A'}) ETA: ${s.eta||'N/A'}`;
+                    setTimeout(poll, 1000);
+                }else if(s.status==='completed'){
+                    document.getElementById('progressFill').style.width = '100%';
+                    document.getElementById('statusText').textContent = 'Download completed!';
+                    document.getElementById('downloadLink').innerHTML = `<a href="/facebook/download-file/${currentId}" class="inline-block bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded px-4 py-2 mt-2 font-semibold shadow">Download File</a>`;
+                }else if(s.status==='error'){
+                    showError(s.error||'Download error');
+                }
+            }catch(err){ showError('Error checking progress'); }
+        }
+        function showError(msg){
+            const e = document.getElementById('errorSection');
+            e.textContent = msg; e.classList.remove('hidden');
+            document.getElementById('progressSection').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
+
